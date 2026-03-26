@@ -87,16 +87,16 @@
       }
     )
     // {
-      overlays.default = nixpkgs.lib.composeManyExtensions [
-        nix-ros-overlay.overlays.default # Adds rosPackages
-        gazebo-sim-overlay.overlays.default # Adds gazebo tools
-        nixgl.overlay # Adds nixGL
-        (import ./overlays/default.nix) # Adds my custom droneTools
-      ];
-
-      overlays.droneTools = import ./overlays/default.nix;
-      overlays.ros = nix-ros-overlay.overlays.default;
-
+      overlays = {
+        default = nixpkgs.lib.composeManyExtensions [
+          nix-ros-overlay.overlays.default # Adds rosPackages
+          gazebo-sim-overlay.overlays.default # Adds gazebo tools
+          nixgl.overlay # Adds nixGL
+          (import ./overlays/default.nix) # Adds my custom droneTools
+        ];
+        droneTools = import ./overlays/default.nix;
+        ros = nix-ros-overlay.overlays.default;
+      };
       lib.mkDroneEnv =
         { pkgs, distro }:
         let
@@ -112,7 +112,9 @@
             pkgs.colcon
             pkgs.mavproxy
             pkgs.droneTools.mavlink.mavp2p
-            pkgs.droneTools.dds.micro-xrce-dds-agent
+            pkgs.droneTools.dds.microxrcedds-agent
+            pkgs.droneTools.rosPkgs.px4-msgs
+            pkgs.droneTools.rosPkgs.px4-ros-com
             nixGLIntel
           ];
 
@@ -128,7 +130,7 @@
       templates = {
         basic = {
           path = ./templates/basic;
-          description = "A basic ROS 2 Jazzy drone environment";
+          description = "A basic ROS 2 Humble drone environment";
         };
         default = self.templates.basic;
       };

@@ -13,7 +13,7 @@
 }:
 
 stdenv.mkDerivation rec {
-  pname = "micro-xrce-dds-client";
+  pname = "microxrcedds-client";
   version = "3.0.1";
 
   src = fetchFromGitHub {

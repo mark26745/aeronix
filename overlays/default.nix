@@ -1,14 +1,22 @@
 final: prev:
 let
-  # Import your DDS set
   dds-pkgs = import ../pkgs/dds final prev;
+
+  ros-pkgs = import ../pkgs/rosPkgs {
+    inherit (final) lib rosPackages;
+    distro = "humble";
+  };
+
+  mavlink-pkgs = prev.lib.makeScope final.newScope (
+    self:
+    prev.lib.filesystem.packagesFromDirectoryRecursive {
+      callPackage = self.callPackage;
+      directory = ../pkgs/mavlink;
+    }
+  );
+
 in
 {
-  # 1. Provide the namespace exactly as you wanted
-  dds = dds-pkgs;
-
-  # 2. Spread them into the top-level so 'callPackage'
-  # in other folders (like mavlink) can find them automatically.
   inherit (dds-pkgs)
     fastcdr
     microcdr
@@ -16,9 +24,9 @@ in
     microxrcedds-client
     ;
 
-  # Example: If you have droneTools or other sets
-  droneTools = prev.lib.filesystem.packagesFromDirectoryRecursive {
-    callPackage = final.callPackage;
-    directory = ../pkgs;
+  droneTools = {
+    dds = dds-pkgs;
+    rosPkgs = ros-pkgs;
+    mavlink = mavlink-pkgs;
   };
 }

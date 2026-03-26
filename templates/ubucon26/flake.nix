@@ -15,7 +15,6 @@
       aeronix,
     }:
     let
-      rosDistro = "humble";
       overlays = [
         aeronix.overlays.default
       ];
@@ -28,7 +27,7 @@
         # Uses helper to create the env
         droneEnv = aeronix.lib.mkDroneEnv {
           inherit pkgs;
-          distro = rosDistro;
+          distro = "jazzy";
         };
       in
       {
@@ -50,7 +49,7 @@
 
           shellHook = ''
             echo "🚀 Welcome to your AeroNix-powered workspace!"
-            echo "ROS_DISTRO is set to ${rosDistro}} via the AeroNix SDK."
+            echo "ROS_DISTRO is set to humble via the AeroNix SDK."
           '';
         };
       }

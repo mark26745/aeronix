@@ -22,6 +22,6 @@ rec {
       microcdr
       fastdds
       ;
-    spdlog = prev.spdlog_1;
+    spdlog = prev.spdlog;
   };
 }
