@@ -101,6 +101,7 @@
         { pkgs, distro }:
         let
           system = pkgs.system;
+          nixGLIntel = nixgl.packages.${system}.nixGLIntel;
         in
         pkgs.rosPackages.${distro}.buildEnv {
           name = "drone-env-${distro}";
@@ -112,7 +113,7 @@
             pkgs.mavproxy
             pkgs.droneTools.mavlink.mavp2p
             pkgs.droneTools.dds.micro-xrce-dds-agent
-            nixgl.packages.${system}.nixGLIntel
+            nixGLIntel
           ];
 
           meta = {
