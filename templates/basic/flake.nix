@@ -50,7 +50,7 @@
 
           shellHook = ''
             echo "🚀 Welcome to your AeroNix-powered workspace!"
-            echo "ROS_DISTRO is set to ${rosDistro}} via the AeroNix SDK."
+            echo "ROS_DISTRO is set to ${rosDistro} via the AeroNix SDK."
           '';
         };
       }
