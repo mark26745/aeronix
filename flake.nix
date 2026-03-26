@@ -29,51 +29,23 @@
       ...
     }:
     let
-      # 1. Supported Distros - Add or remove versions here
       supportedDistros = [
         "humble"
         "jazzy"
         "rolling"
       ];
 
-      # 2. Shared Overlay logic
-      overlays = [
-        self.overlays.default
-        nix-ros-overlay.overlays.default
-        gazebo-sim-overlay.overlays.default
-        nixgl.overlay
-      ];
     in
     nix-ros-overlay.inputs.flake-utils.lib.eachDefaultSystem (
       system:
       let
-        pkgs = import nixpkgs { inherit system overlays; };
+        pkgs = import nixpkgs {
+          inherit system;
+          overlays = [ self.overlays.default ];
+        };
+        mkDroneEnv = distro: self.lib.mkDroneEnv { inherit pkgs distro; };
 
-        # 3. The "Factory" function: Creates a drone environment for a specific distro
-        mkDroneEnv =
-          distro:
-          pkgs.rosPackages.${distro}.buildEnv {
-            name = "drone-env-${distro}";
-            paths = with pkgs.rosPackages.${distro}; [
-              ament-cmake-core
-              python-cmake-module
-              desktop
-              pkgs.colcon
-              pkgs.mavproxy
-              pkgs.droneTools.mavlink.mavp2p
-              pkgs.droneTools.dds.micro-xrce-dds-agent
-              nixgl.packages.${system}.nixGLIntel
-            ];
-            meta = {
-              description = "AeroNix - ${distro} environment";
-              homepage = "https://github.com/mark26745/AeroNix";
-              license = pkgs.lib.licenses.mit;
-              platforms = pkgs.lib.platforms.linux;
-              maintainers = [ "mark26745" ];
-            };
-          };
-
-        # 4. Generate the Attribute Set for all distros
+        # Generate the Attribute Set for all distros
         # Result: { humble = <drv>; jazzy = <drv>; ... }
         distroPackages = builtins.listToAttrs (
           map (distro: {
@@ -82,7 +54,6 @@
           }) supportedDistros
         );
 
-        # 5. Flatten the custom droneTools for the top level
         # Result: { microcdr = <drv>; fastdds = <drv>; ... }
         flatTools = builtins.listToAttrs (
           map (p: {
@@ -93,7 +64,6 @@
 
       in
       {
-        # COMBINED OUTPUTS
         packages =
           distroPackages
           // flatTools
@@ -101,7 +71,6 @@
             default = distroPackages.humble;
           };
 
-        # PER-DISTRO SHELLS: 'nix develop .#jazzy'
         devShells = builtins.mapAttrs (
           name: env:
           pkgs.mkShell {
@@ -118,14 +87,41 @@
       }
     )
     // {
-      # GLOBAL OUTPUTS (Not system-dependent)
-      overlays.default = import ./overlays/default.nix;
+      overlays.default = nixpkgs.lib.composeManyExtensions [
+        nix-ros-overlay.overlays.default # Adds rosPackages
+        gazebo-sim-overlay.overlays.default # Adds gazebo tools
+        nixgl.overlay # Adds nixGL
+        (import ./overlays/default.nix) # Adds my custom droneTools
+      ];
 
-      # Export the function for child flakes to use
+      overlays.droneTools = import ./overlays/default.nix;
+      overlays.ros = nix-ros-overlay.overlays.default;
+
       lib.mkDroneEnv =
         { pkgs, distro }:
+        let
+          system = pkgs.system;
+        in
         pkgs.rosPackages.${distro}.buildEnv {
-          # ... copy of logic or reference ...
+          name = "drone-env-${distro}";
+          paths = with pkgs.rosPackages.${distro}; [
+            ament-cmake-core
+            python-cmake-module
+            desktop
+            pkgs.colcon
+            pkgs.mavproxy
+            pkgs.droneTools.mavlink.mavp2p
+            pkgs.droneTools.dds.micro-xrce-dds-agent
+            nixgl.packages.${system}.nixGLIntel
+          ];
+
+          meta = {
+            description = "AeroNix - ${distro} environment";
+            homepage = "https://github.com/mark26745/AeroNix";
+            license = pkgs.lib.licenses.mit;
+            platforms = pkgs.lib.platforms.linux;
+            maintainers = [ "mark26745" ];
+          };
         };
 
       templates = {
