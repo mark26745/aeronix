@@ -64,6 +64,13 @@
               pkgs.droneTools.dds.micro-xrce-dds-agent
               nixgl.packages.${system}.nixGLIntel
             ];
+            meta = {
+              description = "AeroNix - ${distro} environment";
+              homepage = "https://github.com/mark26745/AeroNix";
+              license = pkgs.lib.licenses.mit;
+              platforms = pkgs.lib.platforms.linux;
+              maintainers = [ "mark26745" ];
+            };
           };
 
         # 4. Generate the Attribute Set for all distros
