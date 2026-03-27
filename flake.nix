@@ -141,6 +141,8 @@
             gz-pkgs.ignition.common5
             gz-pkgs.ignition.msgs10
             gz-pkgs.sdformat_14
+            pkgs.protobuf
+            pkgs.pkg-config
 
             pkgs.colcon
             pkgs.droneTools.dds.microxrcedds-agent
