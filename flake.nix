@@ -41,7 +41,9 @@
       let
         pkgs = import nixpkgs {
           inherit system;
-          overlays = [ self.overlays.default ];
+          overlays = [
+            self.overlays.default
+          ];
         };
         mkDroneEnv = distro: self.lib.mkDroneEnv { inherit pkgs distro; };
 
@@ -71,23 +73,34 @@
             default = distroPackages.humble;
           };
 
-        devShells = builtins.mapAttrs (
-          name: env:
-          pkgs.mkShell {
-            name = "drone-shell-${name}";
-            packages = [ env ];
-            shellHook = ''
-              echo "Shell Hook for ${name} environment is loaded!"
-              export ROS_DISTRO=${name}
-              export QT_QPA_PLATFORM=xcb
-              export QT_PLUGIN_PATH="${pkgs.qt5.qtbase.bin}/${pkgs.qt5.qtbase.qtPluginPrefix}"
-              export QT_QPA_PLATFORM_PLUGIN_PATH="${pkgs.qt5.qtbase.bin}/lib/qt-5.15/plugins"
-              export QT_STYLE_OVERRIDE=Fusion
-              export QT_PALETTE_OVERRIDE=dark
-              echo "--- Drone Lab: ${name} Environment Loaded ---"
-            '';
-          }
-        ) distroPackages;
+        devShells =
+          let
+            shells = builtins.mapAttrs (
+              name: env:
+              pkgs.mkShell {
+                name = "drone-shell-${name}";
+                packages = [ env ];
+                shellHook = ''
+                  	      export ROS_DISTRO=${name}
+                  	      echo "Shell Hook for ${name} environment is loaded!"
+                  	      export ROS_DISTRO=${name}
+                  	      export QT_QPA_PLATFORM=xcb
+                  	      export QT_PLUGIN_PATH="${pkgs.qt5.qtbase.bin}/${pkgs.qt5.qtbase.qtPluginPrefix}"
+                  	      export QT_QPA_PLATFORM_PLUGIN_PATH="${pkgs.qt5.qtbase.bin}/lib/qt-5.15/plugins"
+                  	      export QT_STYLE_OVERRIDE=Fusion
+                  	      export QT_PALETTE_OVERRIDE=dark
+                  	      export GZ_CONFIG_PATH="${env}/share/gz"
+                  	      export LD_LIBRARY_PATH="${env}/lib:$LD_LIBRARY_PATH"
+                  	      export CMAKE_PREFIX_PATH="${env}:$CMAKE_PREFIX_PATH"
+                  	      echo "--- Drone Lab: ${name} Environment Loaded ---"
+                  	      '';
+              }
+            ) distroPackages;
+          in
+          shells
+          // {
+            default = shells.humble;
+          };
 
       }
     )
@@ -109,25 +122,34 @@
           nixGLIntel = nixgl.packages.${system}.nixGLIntel;
           gz-pkgs = gazebo-sim-overlay.legacyPackages.${system};
           rosPkgs = pkgs.rosPackages.${distro};
+          rosEnv = rosPkgs.buildEnv {
+            name = "ros-base-${distro}";
+            paths = [
+              rosPkgs.ros-core
+              rosPkgs.sensor-msgs
+            ];
+          };
         in
-        pkgs.rosPackages.${distro}.buildEnv {
+        pkgs.symlinkJoin {
           name = "drone-env-${distro}";
           paths = [
-            rosPkgs.rviz2
-            rosPkgs.rviz-common
-            rosPkgs.rviz-default-plugins
-            rosPkgs.python-cmake-module
+            rosEnv
             gz-pkgs.gz-harmonic
+            gz-pkgs.ignition.msgs
+            gz-pkgs.ignition.utils2
+            gz-pkgs.ignition.tools2
+            gz-pkgs.ignition.common5
+            gz-pkgs.ignition.msgs10
             gz-pkgs.sdformat_14
-            rosPkgs.ament-cmake-core
-            rosPkgs.desktop
-            rosPkgs.gazebo-msgs
+
             pkgs.colcon
-            pkgs.mavproxy
-            pkgs.droneTools.mavlink.mavp2p
             pkgs.droneTools.dds.microxrcedds-agent
             pkgs.droneTools.rosPkgs.px4-msgs
             pkgs.droneTools.rosPkgs.px4-ros-com
+            # Tools
+            pkgs.mavproxy
+            pkgs.droneTools.mavlink.mavp2p
+
             nixGLIntel
           ];
 
