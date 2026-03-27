@@ -126,6 +126,8 @@
             name = "ros-base-${distro}";
             paths = [
               rosPkgs.ros-core
+              rosPkgs.rosbridge-suite
+              rosPkgs.rviz2
               rosPkgs.sensor-msgs
             ];
           };
@@ -134,6 +136,7 @@
           name = "drone-env-${distro}";
           paths = [
             rosEnv
+
             gz-pkgs.gz-harmonic
             gz-pkgs.ignition.msgs
             gz-pkgs.ignition.utils2
@@ -141,6 +144,7 @@
             gz-pkgs.ignition.common5
             gz-pkgs.ignition.msgs10
             gz-pkgs.sdformat_14
+
             pkgs.protobuf
             pkgs.pkg-config
 
@@ -149,8 +153,8 @@
             pkgs.droneTools.rosPkgs.px4-msgs
             pkgs.droneTools.rosPkgs.px4-ros-com
             # Tools
-            pkgs.mavproxy
             pkgs.droneTools.mavlink.mavp2p
+            pkgs.droneTools.mavlink.mavlink2rest
 
             nixGLIntel
           ];
